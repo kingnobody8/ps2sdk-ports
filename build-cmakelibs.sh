@@ -99,7 +99,7 @@ $FETCH libmikmod-3.3.13 https://github.com/sezero/mikmod.git &
 $FETCH feature/cmake https://github.com/mcmtroffaes/theora.git &
 
 # gsKit requires libtiff
-$FETCH 6efc638453d3f57ac8330a05fb61fca1031bd0f1 https://github.com/kingnobody8/libtiff.git &
+$FETCH 9887c6e238b0aa351f217d96073f3b6b4be03f5f https://github.com/kingnobody8/libtiff.git &
 
 # SDL requires to have gsKit
 $FETCH v1.4.2 https://github.com/ps2dev/gsKit.git &
