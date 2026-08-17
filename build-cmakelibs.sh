@@ -83,12 +83,13 @@ $FETCH v1.3.7 https://github.com/xiph/vorbis.git &
 $FETCH v5.8.2-stable https://github.com/wolfSSL/wolfssl.git &
 $FETCH curl-8_17_0 https://github.com/curl/curl.git &
 $FETCH 1.9.6 https://github.com/open-source-parsers/jsoncpp.git &
-$FETCH libxmp-4.6.2 https://github.com/libxmp/libxmp.git &
+$FETCH libxmp-4.6.3 https://github.com/libxmp/libxmp.git &
 $FETCH v1.6 https://github.com/xiph/opus.git &
 # We need to clone the whole repo and point to the specific hash for now,
-# till they release a new version with cmake compatibility
+# till they release a new version otherwise we are suffering this issue:
+# https://github.com/ps2dev/ps2sdk/issues/499
 # we need to clone whole repo because it uses `git describe --tags` for version info
-$FETCH cf218fb54929a1f54e30e2cb208a22d08b08c889 https://github.com/xiph/opusfile.git true &
+$FETCH 6dfd29e7adb87f2e193575fc3fa88cbf1a0b27df https://github.com/xiph/opusfile.git true &
 $FETCH 1.5.0 https://github.com/xiph/flac.git true &
 # We need to clone the whole repo and point to the specific hash for now,
 # till they release a new version with cmake compatibility
@@ -102,15 +103,22 @@ $FETCH feature/cmake https://github.com/mcmtroffaes/theora.git &
 $FETCH 9887c6e238b0aa351f217d96073f3b6b4be03f5f https://github.com/kingnobody8/libtiff.git &
 
 # SDL requires to have gsKit
-$FETCH v1.4.2 https://github.com/ps2dev/gsKit.git &
+$FETCH v1.5.0 https://github.com/ps2dev/gsKit.git &
+
+# ps2stuff is required for ps2gl
+$FETCH v1.0.0 https://github.com/ps2dev/ps2stuff.git &
+
+# ps2gl requires ps2stuff (Makefile target built before cmakelibs)
+$FETCH v1.0.0 https://github.com/ps2dev/ps2gl.git &
 
 # SDL requires ps2_drivers
-$FETCH 1.7.1 https://github.com/fjtrujy/ps2_drivers &
+$FETCH 1.8.0 https://github.com/fjtrujy/ps2_drivers.git &
 
 # Point to a concrete hash for now, till the SDL team releases a new version
 $FETCH release-2.32.10 https://github.com/libsdl-org/SDL.git &
 $FETCH release-2.8.1 https://github.com/libsdl-org/SDL_mixer.git &
 $FETCH release-2.8.8 https://github.com/libsdl-org/SDL_image.git &
+$FETCH release-2.2.0 https://github.com/libsdl-org/SDL_net.git 
 $FETCH release-2.24.0 https://github.com/libsdl-org/SDL_ttf.git &
 
 $FETCH libsmb2-6.2 https://github.com/sahlberg/libsmb2.git &
@@ -128,6 +136,21 @@ $FETCH R_2_7_3 https://github.com/libexpat/libexpat.git &
 $FETCH v3.8.4 https://github.com/libarchive/libarchive.git &
 
 $FETCH pcre2-10.47 https://github.com/PCRE2Project/pcre2/ &
+
+$FETCH 11.0.0 https://github.com/leethomason/tinyxml2.git &
+
+# Concrete hash for indicating the version of libmpg used 
+$FETCH 2eb4320e161247a15f991a30e7919902a3629f19 https://github.com/libsdl-org/mpg123.git &
+
+# NOTE: We need to clone this commit until a version is released.
+$FETCH bf5f505d0156ad5c6635d05db06b1bb7593b45b7 https://gitlab.com/bzip2/bzip2.git &
+
+$FETCH 184dac64cd556f435c309bb83ed4a31fe14e1cc5 https://github.com/libgme/game-music-emu.git &
+
+$FETCH v3.0.0 https://github.com/Tehreer/SheenBidi.git &
+$FETCH 26.01 https://github.com/FNA-XNA/FAudio.git &
+
+$FETCH munt_2_7_0 https://github.com/munt/munt.git &
 
 # wait for fetch jobs to finish
 wait
@@ -160,6 +183,10 @@ sed -i -e 's/defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__
 sed -i -e 's/defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L/0 \&\& \0/' libarchive/xxhash.c
 popd
 
+pushd build/SDL_net
+sed -i -e 's|#include <net/if.h>||' SDLnetsys.h
+popd
+
 ###
 ### Change to the build folder
 ###
@@ -175,6 +202,8 @@ build_ee lz4/build/cmake -DLZ4_POSITION_INDEPENDENT_LIB=OFF -DLZ4_BUILD_CLI=OFF 
 build_ee libzip -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF
 build_ee libimagequant -DLIB_INSTALL_DIR=lib -DBUILD_WITH_SSE=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 build_ee libpng -DPNG_SHARED=OFF -DPNG_STATIC=ON
+# Link libpng to filename with version number, as pkg-config depends on it
+(cd "${PS2SDK}/ports/lib" && ln -sf "libpng.a" "libpng16.a" && cd -)
 build_ee freetype
 build_ee googletest -DCMAKE_CXX_FLAGS='-D_BSD_SOURCE -DGTEST_HAS_POSIX_RE=0'
 build_ee libyaml -DCMAKE_POLICY_VERSION_MINIMUM=3.5
@@ -201,6 +230,7 @@ build_ee gsKit -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 build_ee ps2_drivers -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_SAMPLES=OFF
 build_ee SDL -DCMAKE_POSITION_INDEPENDENT_CODE=OFF -DSDL_TESTS=OFF
 build_ee SDL_mixer -DCMAKE_POSITION_INDEPENDENT_CODE=OFF -DSDL2MIXER_DEPS_SHARED=OFF -DSDL2MIXER_MOD_MODPLUG=ON -DSDL2MIXER_OPUS=OFF -DSDL2MIXER_WAVPACK=OFF -DSDL2MIXER_MIDI=OFF -DSDL2MIXER_FLAC=OFF -DSDL2MIXER_SAMPLES=OFF
+build_ee SDL_net -DCMAKE_POSITION_INDEPENDENT_CODE=OFF -DSDL2NET_SAMPLES=OFF
 build_ee SDL_image -DCMAKE_POSITION_INDEPENDENT_CODE=OFF -DSDL2IMAGE_TIF=OFF
 build_ee SDL_ttf -DCMAKE_POSITION_INDEPENDENT_CODE=OFF -DSDL2TTF_SAMPLES=OFF
 
@@ -225,6 +255,26 @@ CFLAGS="-D_BSD_SOURCE" build_ee libexpat/expat -DEXPAT_BUILD_EXAMPLES=OFF -DEXPA
 build_ee libarchive -DBUILD_SHARED_LIBS=OFF -DENABLE_WERROR=OFF -DENABLE_TEST=OFF
 
 CFLAGS="-Wno-incompatible-pointer-types" build_ee pcre2 -DPCRE2_BUILD_PCRE2GREP=OFF -DPCRE2_BUILD_TESTS=OFF
+
+build_ee tinyxml2 -DBUILD_TESTS=OFF
+
+build_ee mpg123/ports/cmake -DBUILD_PROGRAM=OFF
+
+build_ee bzip2 -DENABLE_LIBRARY=ON -DENABLE_STATIC_LIB=ON -DENABLE_SHARED_LIB=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+
+build_ee SheenBidi 
+CFLAGS="-Wno-incompatible-pointer-types" build_ee FAudio -DBUILD_SDL3=OFF
+
+build_ee game-music-emu -DGME_BUILD_SHARED=OFF -DGME_ENABLE_UBSAN=OFF -DGME_BUILD_TESTING=OFF -DGME_BUILD_EXAMPLES=OFF
+
+build_ee munt -Dmunt_WITH_MT32EMU_SMF2WAV=FALSE -Dmunt_WITH_MT32EMU_QT=FALSE -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+
+build_ee ps2stuff -DBUILD_TESTS=OFF
+
+build_ee ps2gl -DBUILD_EXAMPLES=OFF
+
+# Make paths in pkg-config files relative, so prefix can be relocated
+find ${PS2SDK}/ports/lib/pkgconfig -iname \*.pc -exec sed -i -e 's/'"$(sed 's/[^^]/[&]/g; s/\^/\\^/g' <<<"${PS2SDK}/ports")"'/${pcfiledir}\/..\/../g' {} \+
 
 # Finish
 cd ..

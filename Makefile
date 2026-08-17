@@ -1,6 +1,7 @@
 LIBS := \
 	aalib\
 	cmakelibs\
+	hash-library\
 	libconfuse\
 	libid3tag\
 	libjpeg_ps2_addons\
@@ -9,8 +10,7 @@ LIBS := \
 	libtiff\
 	lua\
 	madplay\
-	ps2stuff\
-	ps2gl\
+	mmceman\
 	romfs\
 	sdl\
 	sdlgfx\
@@ -51,11 +51,15 @@ aalib:
 	$(MAKE) -C $@
 	$(MAKE) -C $@ install
 
-cmakelibs: libtiff
+cmakelibs: libtiff mmceman
 	./build-cmakelibs.sh
 
 clean-cmakelibs:
 	rm -rf ./build
+
+hash-library:
+	$(MAKE) -C $@ all
+	$(MAKE) -C $@ install
 
 libconfuse:
 	./fetch.sh v3.3 https://github.com/libconfuse/libconfuse
@@ -100,24 +104,18 @@ madplay: cmakelibs libid3tag libmad
 	$(MAKE) -C $@ all
 	$(MAKE) -C $@ install
 
+mmceman:
+	./fetch.sh v2.1.1 https://github.com/ps2-mmce/mmceman
+	$(MAKE) -C build/$@ all
+	cp build/$@/mmceman/irx/mmceman.irx $(PS2SDK)/iop/irx/
+	cp build/$@/mmcedrv/irx/mmcedrv.irx $(PS2SDK)/iop/irx/
+	cp build/$@/mmceigr/irx/mmceigr.irx $(PS2SDK)/iop/irx/
+
 # depends on dream2gl and ps2Perf
 # Broken
 ode:
 	$(MAKE) -C $@
 	$(MAKE) -C $@ install
-
-ps2stuff:
-	./fetch.sh master https://github.com/ps2dev/ps2stuff
-	$(MAKE) -C build/$@ install
-
-ps2gl: ps2stuff
-	./fetch.sh master https://github.com/ps2dev/ps2gl
-	$(MAKE) -C build/$@ install
-	$(MAKE) -C build/$@/glut install
-
-clean-ps2gl:
-	$(MAKE) -C build/ps2gl clean
-	$(MAKE) -C build/ps2gl/glut clean
 
 romfs:
 	$(MAKE) -C $@
